@@ -9,8 +9,9 @@ University of Oxford, 2019
 """
 import numpy as np
 import scipy.stats as sp
-from AC_Utils import AC_fft, curbtaperme, shrinkme, tukeytaperme, xC_fft
-from MatMan import CorrMat, ProdMat, SumMat
+
+from xdf.matrix import CorrMat, ProdMat, SumMat
+from xdf.utils import AC_fft, curbtaperme, shrinkme, tukeytaperme, xC_fft
 
 
 def xDF_Calc(
@@ -47,13 +48,13 @@ def xDF_Calc(
     znaive = np.round(znaive, 7)
 
     # Autocorr
-    [ac, CI] = AC_fft(ts, T)
+    ac, _ = AC_fft(ts, T)
     ac = ac[:, 1 : T - 1]
     # The last element of ACF is rubbish, the first one is 1, so why bother?!
     nLg = T - 2
 
     # Cross-corr
-    [xcf, lid] = xC_fft(ts, T)
+    xcf, _ = xC_fft(ts, T)
 
     xc_p = xcf[:, :, 1 : T - 1]
     xc_p = np.flip(xc_p, axis=2)
@@ -77,17 +78,17 @@ def xDF_Calc(
         xc_p = tukeytaperme(xc_p, nLg, M)
         xc_n = tukeytaperme(xc_n, nLg, M)
 
-        # print(np.round(ac[0,0:50],4))
-
     elif method.lower() == "truncate":
         if type(methodparam) == str:  # Adaptive Truncation
             if methodparam.lower() != "adaptive":
                 raise ValueError(
                     "What?! Choose adaptive as the option, or pass an integer for truncation"
                 )
+
             if verbose:
                 print("xDF_Calc::: AC Regularisation: Adaptive Truncation")
-            [ac, bp] = shrinkme(ac, nLg)
+
+            ac, bp = shrinkme(ac, nLg)
             # truncate the cross-correlations, by the breaking point found from the ACF.
             # (choose the largest of two)
             for i in np.arange(N):
@@ -99,6 +100,7 @@ def xDF_Calc(
                     xc_n[i, j, :] = curbtaperme(
                         xc_n[i, j, :], nLg, maxBP, verbose=False
                     )
+
         elif type(methodparam) == int:  # Npne-Adaptive Truncation
             if verbose:
                 print(

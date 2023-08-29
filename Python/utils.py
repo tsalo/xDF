@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
+"""Miscellaneous utility functions for xDF.
+
 Created on Fri Mar 16 16:53:44 2018
 
 @author: sorooshafyouni
@@ -10,18 +11,8 @@ srafyouni@gmail.com
 import numpy as np
 
 
-def autocorr(x, t=1):
-    """dumb autocorrelation on a 1D array,
-    almost identical to matlab autocorr()"""
-    x = x.copy()
-    x = x - np.tile(np.mean(x), np.size(x))
-    AC = np.zeros(t)
-    for l in np.arange(t):
-        AC[l] = np.corrcoef(np.array([x[0 : len(x) - l], x[l : len(x)]]))[0, 1]
-    return AC
-
-
 def AC_fft(Y, T, copy=True):
+    """Perform something."""
     if copy:
         Y = Y.copy()
 
@@ -53,12 +44,13 @@ def AC_fft(Y, T, copy=True):
 
 
 def xC_fft(Y, T, mxL=[], copy=True):
-    # ***********************************
-    # This should be checked! There shouldn't be any complex numbers!!
-    # __main__:74: ComplexWarning: Casting complex values to real discards the imaginary part
-    # This is because Python, in contrast to Matlab, produce highly prcise imaginary parts
-    # by defualt, when you wanna do ifft, just use np.real()
-    # ***********************************
+    """Perform something.
+
+    This should be checked! There shouldn't be any complex numbers!!
+    __main__:74: ComplexWarning: Casting complex values to real discards the imaginary part
+    This is because Python, in contrast to Matlab, produce highly prcise imaginary parts
+    by defualt, when you wanna do ifft, just use np.real()
+    """
     if copy:
         Y = Y.copy()
 
@@ -107,29 +99,19 @@ def xC_fft(Y, T, mxL=[], copy=True):
 
 
 def nextpow2(x):
-    """
+    """Returns the first P such that P >= abs(N).
+
     nextpow2 Next higher power of 2.
-    nextpow2(N) returns the first P such that P >= abs(N).  It is
-    often useful for finding the nearest power of two sequence
-    length for FFT operations.
+    nextpow2(N) returns the first P such that P >= abs(N).
+    It is often useful for finding the nearest power of two sequence length for FFT operations.
     """
     return 1 if x == 0 else int(2 ** np.ceil(np.log2(x)))
 
 
-def ACL(ts, T):
-    """
-    Calculates Autocorrelation Length of time series ts
-    SA, Ox, 2019
-    """
-    return np.sum(AC_fft(ts, T) ** 2, axis=1)
-
-    ######################## AC Reg Functions #################################
-
-
 def tukeytaperme(ac, T, M, verbose=True):
-    """
-    performs single Tukey tapering for given length of window, M, and initial
-    value, intv. intv should only be used on crosscorrelation matrices.
+    """Perform single Tukey tapering for given length of window, M, and initial value, intv.
+
+    intv should only be used on crosscorrelation matrices.
 
     SA, Ox, 2018
     """
@@ -170,8 +152,8 @@ def tukeytaperme(ac, T, M, verbose=True):
 
 
 def curbtaperme(ac, T, M, verbose=True):
-    """
-    Curb the autocorrelations, according to Anderson 1984
+    """Curb the autocorrelations, according to Anderson 1984.
+
     multi-dimensional, and therefore is fine!
     SA, Ox, 2018
     """
@@ -199,10 +181,9 @@ def curbtaperme(ac, T, M, verbose=True):
 
 
 def shrinkme(ac, T):
-    """
-    Shrinks the *early* bucnhes of autocorr coefficients beyond the CI.
-    Yo! this should be transformed to the matrix form, those fors at the top
-    are bleak!
+    """Shrink the *early* bunches of autocorr coefficients beyond the CI.
+
+    Yo! this should be transformed to the matrix form, those fors at the top are bleak!
 
     SA, Ox, 2018
     """
@@ -218,25 +199,16 @@ def shrinkme(ac, T):
     msk = np.zeros(np.shape(ac))
     BreakPoint = np.zeros(N)
     for i in np.arange(N):
-        TheFirstFalse = np.where(
-            np.abs(ac[i, :]) < bnd
-        )  # finds the break point -- intercept
-        if (
-            np.size(TheFirstFalse) == 0
-        ):  # if you coulnd't find a break point, then continue = the row will remain zero
+        # finds the break point -- intercept
+        TheFirstFalse = np.where(np.abs(ac[i, :]) < bnd)
+
+        # if you couldn't find a break point, then continue = the row will remain zero
+        if np.size(TheFirstFalse) == 0:
             continue
         else:
             BreakPoint_tmp = TheFirstFalse[0][0]
+
         msk[i, :BreakPoint_tmp] = 1
         BreakPoint[i] = BreakPoint_tmp
+
     return ac * msk, BreakPoint
-
-
-# import scipy.io
-# import numpy as np
-# V = '/Users/sorooshafyouni/Home/BCF/BCFAnal/FC/100HCPTimeSeries/Yeo/HCP_FPP_124422_OnlyMTS.mat'
-# mat = scipy.io.loadmat(V)
-# mts = mat['mts']
-# T = np.shape(mts)[0]
-# [AC,CI] = AC_fft(mts,T)
-# [xC,lid] = xC_fft(mts,T)
