@@ -94,12 +94,8 @@ def xDF_Calc(
             for i in np.arange(N):
                 for j in np.arange(N):
                     maxBP = np.max([bp[i], bp[j]])
-                    xc_p[i, j, :] = curbtaperme(
-                        xc_p[i, j, :], nLg, maxBP, verbose=False
-                    )
-                    xc_n[i, j, :] = curbtaperme(
-                        xc_n[i, j, :], nLg, maxBP, verbose=False
-                    )
+                    xc_p[i, j, :] = curbtaperme(ac=xc_p[i, j, :], M=maxBP, verbose=False)
+                    xc_n[i, j, :] = curbtaperme(ac=xc_n[i, j, :], M=maxBP, verbose=False)
 
         elif type(methodparam) == int:  # Npne-Adaptive Truncation
             if verbose:
@@ -107,9 +103,9 @@ def xDF_Calc(
                     "xDF_Calc::: AC Regularisation: Non-adaptive Truncation on M = "
                     + str(methodparam)
                 )
-            ac = curbtaperme(ac, nLg, methodparam)
-            xc_p = curbtaperme(xc_p, nLg, methodparam)
-            xc_n = curbtaperme(xc_n, nLg, methodparam)
+            ac = curbtaperme(ac=ac, M=methodparam)
+            xc_p = curbtaperme(ac=xc_p, M=methodparam)
+            xc_n = curbtaperme(ac=xc_n, M=methodparam)
 
         else:
             raise ValueError(

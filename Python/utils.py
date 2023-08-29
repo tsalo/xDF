@@ -151,7 +151,7 @@ def tukeytaperme(ac, T, M, verbose=True):
     return tt_ts
 
 
-def curbtaperme(ac, T, M, verbose=True):
+def curbtaperme(ac, M, verbose=True):
     """Curb the autocorrelations, according to Anderson 1984.
 
     multi-dimensional, and therefore is fine!
