@@ -15,46 +15,48 @@ under GNU V3.0:
 University of Oxford, 2019
 """
 
-import numpy as np
-import statsmodels.stats.multitest as smmt
-import scipy.stats as sp
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as sp
+import statsmodels.stats.multitest as smmt
 
-
-#def sub2ind(DaShape, X, Y):
+# def sub2ind(DaShape, X, Y):
 #    """ DaShape: [#rows #columns]
 #        returns idx of given X & Y
 #        SA, Ox, 2018 """
 #    return X*DaShape[1] + Y
 
-def OLSRes(YOrig,RG,T,copy=True):
-    """ 
+
+def OLSRes(YOrig, RG, T, copy=True):
+    """
     Or how to deconfound stuff!
     For regressing out stuff from your time series, quickly and nicely!
     SA,Ox,2019
     """
     if copy:
         YOrig = YOrig.copy()
-        
-    if np.shape(YOrig)[0]!=T or np.shape(RG)[0]!=T:
-        raise ValueError('The Y and the X should be TxI format.')
-        
-    #demean anyways!
-    mRG = np.mean(RG,axis=0)
-    RG = RG-np.tile(mRG,(T,1));
-    #B       = np.linalg.solve(RG,YOrig) # more stable than pinv
-    invRG   = np.linalg.pinv(RG)    
-    B       = np.dot(invRG,YOrig)
-    Yhat    = np.dot(RG,B) # find the \hat{Y}
-    Ydeconf = YOrig-Yhat #get the residuals -- i.e. cleaned time series
-    
+
+    if np.shape(YOrig)[0] != T or np.shape(RG)[0] != T:
+        raise ValueError("The Y and the X should be TxI format.")
+
+    # demean anyways!
+    mRG = np.mean(RG, axis=0)
+    RG = RG - np.tile(mRG, (T, 1))
+    # B       = np.linalg.solve(RG,YOrig) # more stable than pinv
+    invRG = np.linalg.pinv(RG)
+    B = np.dot(invRG, YOrig)
+    Yhat = np.dot(RG, B)  # find the \hat{Y}
+    Ydeconf = YOrig - Yhat  # get the residuals -- i.e. cleaned time series
+
     return Ydeconf
+
 
 def issymmetric(W):
     """Check whether a matrix is symmetric"""
-    return((W.transpose() == W).all())
-    
-def SumMat(Y0,T,copy=True): 
+    return (W.transpose() == W).all()
+
+
+def SumMat(Y0, T, copy=True):
     """
     Parameters
     ----------
@@ -62,88 +64,92 @@ def SumMat(Y0,T,copy=True):
 
     Returns
     -------
-    SM : 3D matrix, obtained from element-wise summation of each row with other 
-         rows.    
-         
-    SA, Ox, 2019     
-    """    
-    
-    if copy:
-        Y0 = Y0.copy()    
-    
-    if np.shape(Y0)[0]!=T:
-        print('SumMat::: Input should be in TxN form, the matrix was transposed.')
-        Y0 = np.transpose(Y0)
-    
-    N = np.shape(Y0)[1]
-    Idx = np.triu_indices(N)
-    #F = (N*(N-1))/2
-    SM = np.empty([N,N,T])
-    for i in np.arange(0,np.size(Idx[0])-1):
-        xx = Idx[0][i]
-        yy = Idx[1][i]
-        SM[xx,yy,:] = (Y0[:,xx]+Y0[:,yy]);
-        SM[yy,xx,:] = (Y0[:,yy]+Y0[:,xx]);
-    
-    return SM
+    SM : 3D matrix, obtained from element-wise summation of each row with other
+         rows.
 
-def ProdMat(Y0,T,copy=True):
+    SA, Ox, 2019
     """
-    Parameters
-    ----------
-    Y0 : a 2D matrix of size TxN
 
-    Returns
-    -------
-    SM : 3D matrix, obtained from element-wise multiplication of each row with 
-         other rows. 
-         
-    SA, Ox, 2019       
-    """    
-    
     if copy:
         Y0 = Y0.copy()
 
-    if np.shape(Y0)[0]!=T:
-        print('ProdMat::: Input should be in TxN form, the matrix was transposed.')
+    if np.shape(Y0)[0] != T:
+        print("SumMat::: Input should be in TxN form, the matrix was transposed.")
         Y0 = np.transpose(Y0)
 
     N = np.shape(Y0)[1]
     Idx = np.triu_indices(N)
-    #F = (N*(N-1))/2
-    SM = np.empty([N,N,T])
-    for i in np.arange(0,np.size(Idx[0])-1):
+    # F = (N*(N-1))/2
+    SM = np.empty([N, N, T])
+    for i in np.arange(0, np.size(Idx[0]) - 1):
         xx = Idx[0][i]
         yy = Idx[1][i]
-        SM[xx,yy,:] = (Y0[:,xx]*Y0[:,yy]);
-        SM[yy,xx,:] = (Y0[:,yy]*Y0[:,xx]);
-    
+        SM[xx, yy, :] = Y0[:, xx] + Y0[:, yy]
+        SM[yy, xx, :] = Y0[:, yy] + Y0[:, xx]
+
     return SM
 
-def CorrMat(ts,T,method='rho',copy=True):
-    """ 
-    Produce sample correlation matrices 
+
+def ProdMat(Y0, T, copy=True):
+    """
+    Parameters
+    ----------
+    Y0 : a 2D matrix of size TxN
+
+    Returns
+    -------
+    SM : 3D matrix, obtained from element-wise multiplication of each row with
+         other rows.
+
+    SA, Ox, 2019
+    """
+
+    if copy:
+        Y0 = Y0.copy()
+
+    if np.shape(Y0)[0] != T:
+        print("ProdMat::: Input should be in TxN form, the matrix was transposed.")
+        Y0 = np.transpose(Y0)
+
+    N = np.shape(Y0)[1]
+    Idx = np.triu_indices(N)
+    # F = (N*(N-1))/2
+    SM = np.empty([N, N, T])
+    for i in np.arange(0, np.size(Idx[0]) - 1):
+        xx = Idx[0][i]
+        yy = Idx[1][i]
+        SM[xx, yy, :] = Y0[:, xx] * Y0[:, yy]
+        SM[yy, xx, :] = Y0[:, yy] * Y0[:, xx]
+
+    return SM
+
+
+def CorrMat(ts, T, method="rho", copy=True):
+    """
+    Produce sample correlation matrices
     or Naively corrected z maps.
     """
 
     if copy:
         ts = ts.copy()
 
-    if np.shape(ts)[1]!=T:
-        print('xDF::: Input should be in IxT form, the matrix was transposed.')
+    if np.shape(ts)[1] != T:
+        print("xDF::: Input should be in IxT form, the matrix was transposed.")
         ts = np.transpose(ts)
 
-    N = np.shape(ts)[0];
+    N = np.shape(ts)[0]
     R = np.corrcoef(ts)
-    
-    Z = np.arctanh(R)*np.sqrt(T-3)
-    
-    R[range(N),range(N)] = 0
-    Z[range(N),range(N)] = 0
-    
+
+    Z = np.arctanh(R) * np.sqrt(T - 3)
+
+    R[range(N), range(N)] = 0
+    Z[range(N), range(N)] = 0
+
     return R, Z
-    
-    #R[range(N),range(N)] = 0
+
+    # R[range(N),range(N)] = 0
+
+
 #    if method.lower()=='rho':
 #        R[range(N),range(N)] = 0
 #        return(R)
@@ -154,17 +160,17 @@ def CorrMat(ts,T,method='rho',copy=True):
 #    else: print('Choose between either Type==`Naive` or Type==`rho`')
 
 
-def stat_threshold(Z,mce='fdr_bh',a_level=0.05,side='two',copy=True):
+def stat_threshold(Z, mce="fdr_bh", a_level=0.05, side="two", copy=True):
     """
     Threshold z maps
-    
+
     Parameters
     ----------
-    
+
     mce: multiple comparison error correction method, should be
-    among of the options below. [defualt: 'fdr_bh']. 
+    among of the options below. [defualt: 'fdr_bh'].
     The options are from statsmodels packages:
-        
+
         `b`, `bonferroni` : one-step correction
         `s`, `sidak` : one-step correction
         `hs`, `holm-sidak` : step down method using Sidak adjustments
@@ -177,49 +183,50 @@ def stat_threshold(Z,mce='fdr_bh',a_level=0.05,side='two',copy=True):
         'fdr_tsbky' : two stage fdr correction (Benjamini/Krieger/Yekutieli)
         'fdr_gbs' : adaptive step-down fdr correction (Gavrilov, Benjamini, Sarkar)
     """
-    
+
     if copy:
         Z = Z.copy()
-    
-    if side=='one':
+
+    if side == "one":
         sideflag = 1
-    elif side=='two' or 'double':
+    elif side == "two" or "double":
         sideflag = 2
-    
-    Idx = np.triu_indices(Z.shape[0],1)
+
+    Idx = np.triu_indices(Z.shape[0], 1)
     Zv = Z[Idx]
-    
-    Pv = sp.norm.cdf(-np.abs(Zv))*sideflag
-            
-    [Hv,adjpvalsv] = smmt.multipletests(Pv,method = mce)[:2]    
+
+    Pv = sp.norm.cdf(-np.abs(Zv)) * sideflag
+
+    [Hv, adjpvalsv] = smmt.multipletests(Pv, method=mce)[:2]
     adj_pvals = np.zeros(Z.shape)
     Zt = np.zeros(Z.shape)
-            
-    Zv[np.invert(Hv)] = 0 
-    Zt[Idx] = Zv
-    Zt = Zt + Zt.T; 
-    
-    adj_pvals[Idx] = adjpvalsv   
-    adj_pvals = adj_pvals + adj_pvals.T; 
-    
-    adj_pvals[range(Z.shape[0]),range(Z.shape[0])] = 0
-                
-    return Zt, binarize(Zt), adj_pvals 
 
-def RemoveNeg(Mats,copy=True):
-    """ quickly remove negative values"""
+    Zv[np.invert(Hv)] = 0
+    Zt[Idx] = Zv
+    Zt = Zt + Zt.T
+
+    adj_pvals[Idx] = adjpvalsv
+    adj_pvals = adj_pvals + adj_pvals.T
+
+    adj_pvals[range(Z.shape[0]), range(Z.shape[0])] = 0
+
+    return Zt, binarize(Zt), adj_pvals
+
+
+def RemoveNeg(Mats, copy=True):
+    """quickly remove negative values"""
     if copy:
         Mats = Mats.copy()
-    Mats[Mats<0] = 0
-    return(Mats)
-    
+    Mats[Mats < 0] = 0
+    return Mats
+
 
 class MatManParamError(RuntimeError):
     pass
 
 
 def threshold_absolute(W, thr, copy=True):
-    '''
+    """
     This function thresholds the connectivity matrix by absolute weight
     magnitude. All weights below the given threshold, and all weights
     on the main diagonal (self-self connections) are set to 0.
@@ -240,7 +247,7 @@ def threshold_absolute(W, thr, copy=True):
     -------
     W : np.ndarray
         thresholded connectivity matrix
-    '''
+    """
     if copy:
         W = W.copy()
     np.fill_diagonal(W, 0)  # clear diagonal
@@ -249,7 +256,7 @@ def threshold_absolute(W, thr, copy=True):
 
 
 def threshold_proportional(W, p, copy=True):
-    '''
+    """
     This function "thresholds" the connectivity matrix by preserving a
     proportion p (0<p<1) of the strongest weights. All other weights, and
     all weights on the main diagonal (self-self connections) are set to 0.
@@ -291,39 +298,39 @@ def threshold_proportional(W, p, copy=True):
     That is, the 50% thresholding of x_25 does nothing because >=50% of the
     elements in x_25 are aleady <=0. This behavior is the same as in BCT. Be
     careful with matrices that are both signed and sparse.
-    '''
+    """
     from .miscellaneous_utilities import teachers_round as round
 
     if p > 1 or p < 0:
-        raise MatManParamError('Threshold must be in range [0,1]')
+        raise MatManParamError("Threshold must be in range [0,1]")
     if copy:
         W = W.copy()
-    n = len(W)						# number of nodes
-    np.fill_diagonal(W, 0)			# clear diagonal
+    n = len(W)  # number of nodes
+    np.fill_diagonal(W, 0)  # clear diagonal
 
-    if np.allclose(W, W.T):				# if symmetric matrix
-        W[np.tril_indices(n)] = 0		# ensure symmetry is preserved
-        ud = 2						# halve number of removed links
+    if np.allclose(W, W.T):  # if symmetric matrix
+        W[np.tril_indices(n)] = 0  # ensure symmetry is preserved
+        ud = 2  # halve number of removed links
     else:
         ud = 1
 
-    ind = np.where(W)					# find all links
+    ind = np.where(W)  # find all links
 
-    I = np.argsort(W[ind])[::-1]		# sort indices by magnitude
+    I = np.argsort(W[ind])[::-1]  # sort indices by magnitude
 
-    en = int(round((n * n - n) * p / ud))		# number of links to be preserved
+    en = int(round((n * n - n) * p / ud))  # number of links to be preserved
 
     W[(ind[0][I][en:], ind[1][I][en:])] = 0  # apply threshold
-    #W[np.ix_(ind[0][I][en:], ind[1][I][en:])]=0
+    # W[np.ix_(ind[0][I][en:], ind[1][I][en:])]=0
 
-    if ud == 2:						# if symmetric matrix
-        W[:, :] = W + W.T						# reconstruct symmetry
+    if ud == 2:  # if symmetric matrix
+        W[:, :] = W + W.T  # reconstruct symmetry
 
     return W
 
 
 def weight_conversion(W, wcm, copy=True):
-    '''
+    """
     W_bin = weight_conversion(W, 'binarize');
     W_nrm = weight_conversion(W, 'normalize');
     L = weight_conversion(W, 'lengths');
@@ -370,19 +377,19 @@ def weight_conversion(W, wcm, copy=True):
     This function is included for compatibility with BCT. But there are
     other functions binarize(), normalize() and invert() which are simpler to
     call directly.
-    '''
-    if wcm == 'binarize':
+    """
+    if wcm == "binarize":
         return binarize(W, copy)
-    elif wcm == 'normalize':
+    elif wcm == "normalize":
         return normalize(W, copy)
-    elif wcm == 'lengths':
+    elif wcm == "lengths":
         return invert(W, copy)
     else:
-        raise NotImplementedError('Unknown weight conversion command.')
+        raise NotImplementedError("Unknown weight conversion command.")
 
 
 def binarize(W, copy=True):
-    '''
+    """
     Binarizes an input weighted connection matrix.  If copy is not set, this
     function will *modify W in place.*
 
@@ -398,7 +405,7 @@ def binarize(W, copy=True):
     -------
     W : NxN np.ndarray
         binary connectivity matrix
-    '''
+    """
     if copy:
         W = W.copy()
     W[W != 0] = 1
@@ -406,7 +413,7 @@ def binarize(W, copy=True):
 
 
 def normalize(W, copy=True):
-    '''
+    """
     Normalizes an input weighted connection matrix.  If copy is not set, this
     function will *modify W in place.*
 
@@ -422,7 +429,7 @@ def normalize(W, copy=True):
     -------
     W : np.ndarray
         normalized connectivity matrix
-    '''
+    """
     if copy:
         W = W.copy()
     W /= np.max(np.abs(W))
@@ -430,7 +437,7 @@ def normalize(W, copy=True):
 
 
 def invert(W, copy=True):
-    '''
+    """
     Inverts elementwise the weights in an input connection matrix.
     In other words, change the from the matrix of internode strengths to the
     matrix of internode distances.
@@ -449,16 +456,16 @@ def invert(W, copy=True):
     -------
     W : np.ndarray
         inverted connectivity matrix
-    '''
+    """
     if copy:
         W = W.copy()
     E = np.where(W)
-    W[E] = 1. / W[E]
+    W[E] = 1.0 / W[E]
     return W
 
 
 def autofix(W, copy=True):
-    '''
+    """
     Fix a bunch of common problems. More specifically, remove Inf and NaN,
     ensure exact binariness and symmetry (i.e. remove floating point
     instability), and zero diagonal.
@@ -476,7 +483,7 @@ def autofix(W, copy=True):
     -------
     W : np.ndarray
         connectivity matrix with fixes applied
-    '''
+    """
     if copy:
         W = W.copy()
 
@@ -497,8 +504,9 @@ def autofix(W, copy=True):
 
     return W
 
+
 def density_und(CIJ):
-    '''
+    """
     Density is the fraction of present connections to possible connections.
 
     Parameters
@@ -519,7 +527,7 @@ def density_und(CIJ):
     -----
     Assumes CIJ is undirected and has no self-connections.
             Weight information is discarded.
-    '''
+    """
     n = len(CIJ)
     k = np.size(np.where(np.triu(CIJ).flatten()))
     kden = k / ((n * n - n) / 2)
