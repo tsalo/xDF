@@ -1,0 +1,156 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs", "nipreps-versions"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xDF"
+description = "xDF: Correlations robust to autocorrelation"
+authors = [{name = "Soroosh Afyouni, Stephen M. Smith, and Thomas E. Nichols"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+license = {file = "LICENSE"}
+requires-python = ">=3.6"
+dependencies = [
+    "numpy",
+    "scipy",
+    "statsmodels",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/asoroosh/xDF"
+Paper = "https://doi.org/10.1016/j.neuroimage.2019.05.011"
+
+[project.optional-dependencies]
+doc = [
+    "doctest-ignore-unicode",
+    "nbsphinx",
+    "pydot >=1.2.3",
+    "pydotplus",
+    "recommonmark",
+    "sphinx >= 4.2.0",
+    "sphinx-argparse",
+    "sphinx-markdown-tables",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-apidoc",
+    "sphinxcontrib-bibtex",
+    "svgutils",
+]
+tests = [
+    "coverage",
+    "flake8",
+    "flake8-absolute-import",
+    "flake8-black",
+    "flake8-docstrings",
+    "flake8-isort",
+    "flake8-pyproject",
+    "flake8-unused-arguments",
+    "flake8-use-fstring",
+    "flake8-warnings",
+    "pep8-naming",
+    "pytest",
+    "pytest-cov",
+]
+maint = [
+    "fuzzywuzzy",
+    "python-Levenshtein",
+]
+
+# Aliases
+all = ["xdf[doc,maint,tests]"]
+
+#
+# Hatch configurations
+#
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.sdist]
+exclude = [".git_archival.txt"]  # No longer needed in sdist
+
+[tool.hatch.build.targets.wheel]
+packages = ["xdf"]
+exclude = [
+    "xdf/MatlabTests",
+    "xdf/examples",
+]
+
+##  The following two sections configure setuptools_scm in the hatch way
+
+[tool.hatch.version]
+source = "vcs"
+# raw-options = { version_scheme = "nipreps-calver" }
+
+[tool.hatch.build.hooks.vcs]
+version-file = "xdf/_version.py"
+
+#
+# Developer tool configurations
+#
+
+[tool.black]
+line-length = 99
+target-version = ['py38']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.github
+    | \.hg
+    | \.pytest_cache
+    | _build
+    | build
+    | dist
+  )/
+  | versioneer.py
+  | xcp_d/_version.py
+)
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+src_paths = ["isort", "test"]
+known_local_folder = ["xdf"]
+
+[tool.flake8]
+max-line-length = "99"
+doctests = "False"
+exclude = [
+    "*build/",
+    "xdf/_version.py",
+    "xdf/MatlabTests/",
+    "xdf/examples/",
+]
+ignore = ["D107", "E203", "E402", "E722", "W503", "N803", "N806", "N815"]
+per-file-ignores = [
+    "**/__init__.py : F401",
+    "docs/conf.py : E265",
+]
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "xdf/MatlabTests/*",
+    "*/__init__.py",
+    "*/conftest.py",
+    "xdf/_version.py"
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    'raise NotImplementedError',
+    'warnings\.warn',
+]

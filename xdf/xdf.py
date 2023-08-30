@@ -23,7 +23,49 @@ def xDF_Calc(
     TV=True,
     copy=True,
 ):
-    """Run xDF."""
+    """Run xDF.
+
+    Parameters
+    ----------
+    ts : :obj:`numpy.ndarray` of shape (I, T)
+        Time series array to correlate with xDF.
+        I = number of regions/voxels
+        T = number of data points
+    T : :obj:`int`
+        Number of data points. Should match dimension 1 of ``ts``.
+    method : {"tukey", "truncate"}
+    methodparam
+        If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
+        If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
+    verbose : :obj:`bool`, optional
+        If True, extra messages will be printed.
+        Default = True.
+    TV : :obj:`bool`, optional
+        If an estimate exceeds the theoretical variance of a white noise then it curbs the
+        estimate back to (1-rho^2)^2/T.
+        To disable this "curbing", set TV to False.
+        Default = True.
+    copy : :obj:`bool`, optional
+        If False, this function may modify the original data array.
+        Default = True.
+
+    Returns
+    -------
+    xDFOut : :obj:`dict`
+        A dictionary containing the following keys:
+        -   "p": IxI array of uncorrected p-values.
+        -   "z": IxI array of z-scores, adjusted for autocorrelation.
+        -   "znaive": IxI array of z-scores without any autocorrelation adjustment.
+        -   "v": IxI array of variance of correlation coefficient between corresponding elements,
+            with the diagonal set to 0.
+        -   "TV": Theoretical variance under x & y are i.i.d; (1-rho^2)^2.
+        -   "TVExIdx": Index of (i,j) edges of which their variance exceeded the theoretical
+            variance.
+
+    Notes
+    -----
+    Per the xDF paper, method="truncate" + methodparam="adaptive" works best.
+    """
     # Make sure you are not messing around with the original time series
     if copy:
         ts = ts.copy()
@@ -79,7 +121,8 @@ def xDF_Calc(
         xc_n = tukeytaperme(xc_n, nLg, M)
 
     elif method.lower() == "truncate":
-        if type(methodparam) == str:  # Adaptive Truncation
+        # Adaptive Truncation
+        if isinstance(methodparam, str):
             if methodparam.lower() != "adaptive":
                 raise ValueError(
                     "What?! Choose adaptive as the option, or pass an integer for truncation"
@@ -144,15 +187,14 @@ def xDF_Calc(
 
     idx_ex = np.where(VarHatRho < TV_val)
     NumTVEx = (np.shape(idx_ex)[1]) / 2
-    # print(NumTVEx)
 
     if NumTVEx > 0 and TV:
         if verbose:
             print("Variance truncation is ON.")
+
         # Assuming that the variance can *only* get larger in presence of autocorrelation.
         VarHatRho[idx_ex] = TV_val[idx_ex]
-        # print(N)
-        # print(np.shape(idx_ex)[1])
+
         FGE = N * (N - 1) / 2
         if verbose:
             print(
@@ -170,17 +212,15 @@ def xDF_Calc(
 
     # Our turf--------------------------------
     rf = np.arctanh(rho)
-    sf = VarHatRho / (
-        (1 - rho**2) ** 2
-    )  # delta method; make sure the N is correct! So they cancel out.
+    # delta method; make sure the N is correct! So they cancel out.
+    sf = VarHatRho / ((1 - rho**2) ** 2)
     rzf = rf / np.sqrt(sf)
     f_pval = 2 * sp.norm.cdf(-abs(rzf))  # both tails
 
     # diagonal is rubbish;
     VarHatRho[range(N), range(N)] = 0
-    f_pval[
-        range(N), range(N)
-    ] = 0  # NaN screws up everything, so get rid of the diag, but becareful here.
+    # NaN screws up everything, so get rid of the diag, but be careful here.
+    f_pval[range(N), range(N)] = 0
     rzf[range(N), range(N)] = 0
 
     # End of Statistical Inference
