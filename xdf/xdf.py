@@ -18,19 +18,23 @@ LGR = logging.getLogger("xdf.xdf")
 
 
 class AutocorrPearson(object):
+    """Calculate Pearson correlation and variance matrices accounting for autocorrelation."""
+
     def __init__(self, method="truncate", methodparam="adaptive", limit_variance=True):
         """Calculate Pearson correlation and variance matrices accounting for autocorrelation.
 
         Parameters
         ----------
-        method : {"tukey", "truncate"}
+        method : {"tukey", "truncate"}, optional
             The method for estimating autocorrelation.
-        methodparam
+            Default = "truncate".
+        methodparam : :obj:`str`, :obj:`int`, or :obj:`float`, optional
             If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
             If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
+            Default = "adaptive".
         limit_variance : :obj:`bool`, optional
             If an estimate exceeds the theoretical variance of a white noise then it curbs the
-            estimate back to (1-rho^2)^2/n_cols.
+            estimate back to ``(1-rho^2)^2/n_cols``.
             To disable this "curbing", set limit_variance to False.
             Default = True.
 
@@ -43,9 +47,18 @@ class AutocorrPearson(object):
             The diagonal is zeroed out.
         varlimit_ : :obj:`float`
             Theoretical variance under x & y are i.i.d; (1-rho^2)^2.
-        varlimit_idx_ : :obj:`numpy.ndarray` of shape (O, 2)
+        varlimit_idx_ : :obj:`numpy.ndarray` of shape (K, 2)
             Index of (i,j) edges of which their variance exceeded the theoretical variance.
-            O = number of outliers.
+            K = number of outliers.
+        z_corrected_ : :obj:`numpy.ndarray` of shape (n_features, n_features)
+            Z test statistics corrected for autocorrelation.
+        z_uncorrected_ : :obj:`numpy.ndarray` of shape (n_features, n_features)
+            Z test statistics without autocorrelation correction.
+
+        Notes
+        -----
+        Per :footcite:t:`afyouni2019effective`, method="truncate" + methodparam="adaptive" works
+        best.
         """
         self.method = method
         self.methodparam = methodparam
@@ -79,7 +92,9 @@ class AutocorrPearson(object):
         self.correlation_ = dict_["r"]
         self.variance_ = dict_["v"]
         self.varlimit_ = dict_["varlimit"]
-        self.varlimit_idx_ = dict_["varlimit_idx_"]
+        self.varlimit_idx_ = dict_["varlimit_idx"]
+        self.z_corrected_ = dict_["z"]
+        self.z_uncorrected_ = dict_["z_uncorrected"]
 
         return self.correlation_, self.variance_
 
@@ -103,7 +118,7 @@ def autocorr_pearson(
     n_samples : :obj:`int`
         Number of data points. Should match dimension 0 of ``arr``.
     method : {"tukey", "truncate"}
-    methodparam
+    methodparam : :obj:`str`, :obj:`int`, or :obj:`float`
         If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
         If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
         If ``methodparam`` is an empty string, then a default value of sqrt(n_samples) will
@@ -132,7 +147,7 @@ def autocorr_pearson(
 
     Notes
     -----
-    Per the xDF paper, method="truncate" + methodparam="adaptive" works best.
+    Per :footcite:t:`afyouni2019effective`, method="truncate" + methodparam="adaptive" works best.
     """
     # Make sure you are not messing around with the original time series
     if copy:
@@ -233,7 +248,7 @@ def autocorr_pearson(
     np.fill_diagonal(varlimit, 0)
 
     varlimit_idx = np.where(var < varlimit)
-    n_var_outliers = varlimit_idx[1].shape / 2
+    n_var_outliers = varlimit_idx[1].size / 2
 
     if n_var_outliers > 0 and limit_variance:
         LGR.debug("Variance truncation is ON.")
