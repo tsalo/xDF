@@ -17,7 +17,7 @@ mat = scipy.io.loadmat(V)
 mts = mat["mts"]
 T = 1200
 
-AC, bnd = AC_fft(mts, T)
+AC, bnd = autocorr_fft(mts, T)
 
 print(bnd)
 
