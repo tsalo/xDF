@@ -91,6 +91,7 @@ class AutocorrPearson(object):
         )
         self.correlation_ = dict_["r"]
         self.variance_ = dict_["v"]
+        self.variance_z_ = dict_["var_z"]
         self.varlimit_ = dict_["varlimit"]
         self.varlimit_idx_ = dict_["varlimit_idx"]
         self.z_corrected_ = dict_["z"]
@@ -141,6 +142,8 @@ def autocorr_pearson(
         -   "z_uncorrected": IxI array of z-scores without any autocorrelation adjustment.
         -   "v": IxI array of variance of correlation coefficient between corresponding elements,
             with the diagonal set to 0.
+        -   "var_z": IxI array of variance of z-transformed correlation coefficient between
+            corresponding elements, with the diagonal set to 0.
         -   "varlimit": Theoretical variance under x & y are i.i.d; (1-rho^2)^2.
         -   "varlimit_idx": Index of (i,j) edges of which their variance exceeded the theoretical
             variance.
@@ -269,12 +272,13 @@ def autocorr_pearson(
     # Our turf--------------------------------
     rf = np.arctanh(rho)
     # delta method; make sure the N is correct! So they cancel out.
-    sf = var / ((1 - rho**2) ** 2)
-    z_corrected = rf / np.sqrt(sf)
+    var_z = var / ((1 - rho**2) ** 2)
+    z_corrected = rf / np.sqrt(var_z)
     p_corrected = 2 * sp.norm.cdf(-abs(z_corrected))  # both tails
 
-    # diagonal is rubbish;
+    # diagonal is rubbish
     np.fill_diagonal(var, 0)
+    np.fill_diagonal(var_z, 0)
     # NaN screws up everything, so get rid of the diag, but be careful here.
     np.fill_diagonal(p_corrected, 0)
     np.fill_diagonal(z_corrected, 0)
@@ -286,6 +290,7 @@ def autocorr_pearson(
         "z": z_corrected,
         "z_uncorrected": z_uncorrected,
         "v": var,
+        "var_z": var_z,
         "varlimit": varlimit,
         "varlimit_idx": varlimit_idx,
     }
