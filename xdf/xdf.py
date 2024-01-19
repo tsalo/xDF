@@ -219,7 +219,7 @@ def autocorr_pearson(
                     xc_p[i_row, j_row, :] = curbtaperme(ac=xc_p[i_row, j_row, :], M=maxBP)
                     xc_n[i_row, j_row, :] = curbtaperme(ac=xc_n[i_row, j_row, :], M=maxBP)
 
-        elif type(methodparam) == int:  # Npne-Adaptive Truncation
+        elif isinstance(methodparam, int):  # Npne-Adaptive Truncation
             LGR.debug(f"AC Regularisation: Non-adaptive Truncation on M = {methodparam}")
             ac = curbtaperme(ac=ac, M=methodparam)
             xc_p = curbtaperme(ac=xc_p, M=methodparam)
