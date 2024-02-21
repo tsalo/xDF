@@ -177,13 +177,14 @@ def autocorr_pearson(
 
     # Autocorr
     ac, _ = autocorr_fft(arr, n_samples)
+    # The last element of ACF is rubbish, the first one is 1, so drop them both.
     ac = ac[:, 1 : n_samples - 1]
-    # The last element of ACF is rubbish, the first one is 1, so why bother?!
     nLg = n_samples - 2
 
     # Cross-corr
     xcf, _ = crosscorr_fft(arr, n_samples)
 
+    # Drop first and last elements of xcf
     xc_p = xcf[:, :, 1 : n_samples - 1]
     xc_p = np.flip(xc_p, axis=2)
     # positive-lag xcorrs

@@ -25,20 +25,22 @@ def autocorr_fft(arr, n_cols, copy=True):
 
     Returns
     -------
-    xAC
-    CI
+    xAC : numpy.ndarray of shape (?, ?)
+        Autocorrelation matrix.
+    ci : list of length 2
+        Lower and upper bounds of the confidence interval.
+        What is the interval though? 95%?
     """
     if copy:
         arr = arr.copy()
 
-    if np.shape(arr)[1] != n_cols:
+    if arr.shape[1] != n_cols:
         assert arr.shape[0] == n_cols
         LGR.info("Input should be in IxT form, the matrix was transposed.")
         arr = arr.T
 
     LGR.info("Demean along T")
-    mY2 = np.mean(arr, axis=1)
-    arr = arr - np.tile(mY2, (n_cols, 1)).T
+    arr -= np.mean(arr, axis=1, keepdims=True)
 
     nfft = int(nextpow2(2 * n_cols - 1))
     # zero-pad the hell out!
@@ -54,9 +56,9 @@ def autocorr_fft(arr, n_cols, copy=True):
 
     bnd = (np.sqrt(2) * 1.3859) / np.sqrt(n_cols)
     # assumes normality for AC
-    CI = [-bnd, bnd]
+    ci = [-bnd, bnd]
 
-    return xAC, CI
+    return xAC, ci
 
 
 def crosscorr_fft(arr, n_cols, mxL=[], copy=True):
