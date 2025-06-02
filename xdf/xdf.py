@@ -270,7 +270,7 @@ def autocorr_pearson(
             "edges had variance smaller than the textbook variance!"
         )
     else:
-        LGR.debug("NO truncation to the theoritical variance.")
+        LGR.debug("NO truncation to the theoretical variance.")
 
     # Start of Statistical Inference
 
@@ -379,7 +379,9 @@ def autocorr_pearson_scrub(
     list_pairs = list(
         itertools.combinations(np.setdiff1d(np.arange(n_samples), scrubbed_frames), 2)
     )
-    n_pairs = [n_retained_samples] + list(np.bincount([y - x for (x, y) in list_pairs], minlength=n_samples)[1:])
+    n_pairs = [n_retained_samples] + list(
+        np.bincount([y - x for (x, y) in list_pairs], minlength=n_samples)[1:]
+    )
     n_denom = n_pairs + np.arange(n_samples)
 
     # Calculate autocorrelation
