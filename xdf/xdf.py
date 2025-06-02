@@ -108,7 +108,7 @@ def autocorr_pearson(
     limit_variance=True,
     copy=True,
 ):
-    """Run xDF.
+    """Calculate the xDF matrix for a given time series.
 
     Parameters
     ----------

@@ -65,6 +65,10 @@ def autocorr_pearson(
         -   "varlimit": Theoretical variance under x & y are i.i.d; (1-rho^2)^2.
         -   "varlimit_idx": Index of (i,j) edges of which their variance exceeded the theoretical
             variance.
+
+    Notes
+    -----
+    Per :footcite:t:`afyouni2019effective`, method="truncate" + methodparam="adaptive" works best.
     """
     if copy:
         arr = arr.copy()
