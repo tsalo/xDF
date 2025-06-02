@@ -17,7 +17,7 @@ from scipy.linalg import toeplitz
 from xdf.utils import curbtaperme, tukeytaperme, shrinkme
 
 
-def autocorr_pearson(
+def autocorr_pearson_scrub(
     arr,
     n_samples,
     method="truncate",
