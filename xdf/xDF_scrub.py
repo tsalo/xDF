@@ -22,7 +22,6 @@ def autocorr_pearson(
     n_samples,
     method="truncate",
     methodparam="adaptive",
-    verbose=True,
     limit_variance=True,
     copy=True,
 ):
@@ -43,8 +42,6 @@ def autocorr_pearson(
         If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
         If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
         Default = "adaptive".
-    verbose : bool, optional
-        Whether to print verbose output.
     limit_variance : bool, optional
         If an estimate is lower than the theoretical variance of a white noise then it increases the
         estimate up to ``(1-rho^2)^2/n_cols``.
@@ -64,8 +61,7 @@ def autocorr_pearson(
         arr = arr.copy()
 
     if np.shape(arr)[1] != n_samples:
-        if verbose:
-            print("Second dimension should be n_samples; the matrix was transposed")
+        print("Second dimension should be n_samples; the matrix was transposed")
         arr = np.transpose(arr)
 
     n_rows = np.shape(arr)[0]
@@ -127,8 +123,7 @@ def autocorr_pearson(
         else:
             M = methodparam
 
-        if verbose:
-            print("AC regularization: Tukey tapering of M = " + str(int(np.round(M))))
+        print(f"AC regularization: Tukey tapering of M = {int(np.round(M))}")
 
         ac = tukeytaperme(ac, n_samples - 1, M)
         xc_p = tukeytaperme(xc_p, n_samples - 1, M)
@@ -139,8 +134,7 @@ def autocorr_pearson(
             if methodparam.lower() != "adaptive":
                 raise ValueError("methodparam for truncation must be 'adaptive' or an integer")
 
-            if verbose:
-                print("AC regularization: adaptive truncation")
+            print("AC regularization: adaptive truncation")
 
             ac, bp = shrinkme(ac, n_samples)
 
@@ -148,18 +142,16 @@ def autocorr_pearson(
                 for j in np.arange(n_rows):
                     maxBP = np.max([bp[i], bp[j]])
                     xc_p[i, j, :] = curbtaperme(
-                        xc_p[i, j, :], n_samples - 1, maxBP, verbose=False
+                        xc_p[i, j, :], n_samples - 1, maxBP,
+                        verbose=False,
                     )
                     xc_n[i, j, :] = curbtaperme(
-                        xc_n[i, j, :], n_samples - 1, maxBP, verbose=False
+                        xc_n[i, j, :], n_samples - 1, maxBP,
+                        verbose=False,
                     )
 
         elif isinstance(methodparam, int):  # Non-adaptive truncation
-            if verbose:
-                print(
-                    "AC regularization: non-adaptive truncation on M = "
-                    + str(methodparam)
-                )
+            print(f"AC regularization: non-adaptive truncation on M = {methodparam}")
             ac = curbtaperme(ac, n_samples - 1, methodparam)
             xc_p = curbtaperme(xc_p, n_samples - 1, methodparam)
             xc_n = curbtaperme(xc_n, n_samples - 1, methodparam)
