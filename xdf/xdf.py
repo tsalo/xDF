@@ -117,16 +117,17 @@ def autocorr_pearson(
         V = number of features/regions/voxels
         T = number of samples/data points/volumes
     n_samples : :obj:`int`
-        Number of data points. Should match dimension 0 of ``arr``.
-    method : {"tukey", "truncate"}
-    methodparam : :obj:`str`, :obj:`int`, or :obj:`float`
+        Number of data points/volumes. Should match dimension 0 of ``arr``.
+    method : {"tukey", "truncate"}, optional
+        The method for estimating autocorrelation.
+        Default = "truncate".
+    methodparam : :obj:`str`, :obj:`int`, or :obj:`float`, optional
         If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
         If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
-        If ``methodparam`` is an empty string, then a default value of sqrt(n_samples) will
-        be used, as recommended in :footcite:t:`chatfield2016analysis`.
+        Default = "adaptive".
     limit_variance : :obj:`bool`, optional
-        If an estimate exceeds the theoretical variance of a white noise then it curbs the
-        estimate back to (1-rho^2)^2/n_features.
+        If an estimate is lower than the theoretical variance of a white noise then it increases the
+        estimate up to ``(1-rho^2)^2/n_cols``.
         To disable this "curbing", set limit_variance to False.
         Default = True.
     copy : :obj:`bool`, optional
@@ -140,8 +141,8 @@ def autocorr_pearson(
         -   "p": IxI array of uncorrected p-values.
         -   "z": IxI array of z-scores, adjusted for autocorrelation.
         -   "z_uncorrected": IxI array of z-scores without any autocorrelation adjustment.
-        -   "v": IxI array of variance of correlation coefficient between corresponding elements,
-            with the diagonal set to 0.
+        -   "v": IxI array of variance of correlation coefficient between
+            corresponding elements, with the diagonal set to 0.
         -   "var_z": IxI array of variance of z-transformed correlation coefficient between
             corresponding elements, with the diagonal set to 0.
         -   "varlimit": Theoretical variance under x & y are i.i.d; (1-rho^2)^2.

@@ -42,12 +42,12 @@ def autocorr_pearson(
         If ``method`` is "truncate", ``methodparam`` must be "adaptive" or an integer.
         If ``method`` is "tukey", ``methodparam`` must be an empty string ("") or a number.
         Default = "adaptive".
-    limit_variance : bool, optional
+    limit_variance : :obj:`bool`, optional
         If an estimate is lower than the theoretical variance of a white noise then it increases the
         estimate up to ``(1-rho^2)^2/n_cols``.
         To disable this "curbing", set limit_variance to False.
         Default = True.
-    copy : bool, optional
+    copy : :obj:`bool`, optional
         If False, this function may modify the original data array.
         Default = True.
 
