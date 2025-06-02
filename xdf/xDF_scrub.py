@@ -29,10 +29,10 @@ def autocorr_pearson(
 
     Parameters
     ----------
-    arr : :obj:`numpy.ndarray` of shape (V, n_samples)
+    arr : :obj:`numpy.ndarray` of shape (V, T)
         Time series array to correlate with xDF.
         V = number of features/regions/voxels
-        n_samples = number of samples/data points/volumes
+        T = number of samples/data points/volumes
     n_samples : :obj:`int`
         Number of data points/volumes. Should match dimension 0 of ``arr``.
     method : {"tukey", "truncate"}, optional
@@ -53,9 +53,18 @@ def autocorr_pearson(
 
     Returns
     -------
-    var_hat_rho : array-like of shape (n_rows, n_rows)
-        Variance of correlation coefficient between corresponding elements,
-        with the diagonal set to 0.
+    out : :obj:`dict`
+        A dictionary containing the following keys:
+        -   "p": IxI array of uncorrected p-values.
+        -   "z": IxI array of z-scores, adjusted for autocorrelation.
+        -   "z_uncorrected": IxI array of z-scores without any autocorrelation adjustment.
+        -   "var_hat_rho": IxI array of variance of correlation coefficient between
+            corresponding elements, with the diagonal set to 0.
+        -   "var_z": IxI array of variance of z-transformed correlation coefficient between
+            corresponding elements, with the diagonal set to 0.
+        -   "varlimit": Theoretical variance under x & y are i.i.d; (1-rho^2)^2.
+        -   "varlimit_idx": Index of (i,j) edges of which their variance exceeded the theoretical
+            variance.
     """
     if copy:
         arr = arr.copy()
