@@ -126,6 +126,7 @@ def autocorr_pearson(
             M = np.sqrt(n_samples)
         else:
             M = methodparam
+
         if verbose:
             print("AC regularization: Tukey tapering of M = " + str(int(np.round(M))))
 
@@ -136,9 +137,7 @@ def autocorr_pearson(
     elif method.lower() == "truncate":
         if isinstance(methodparam, str):  # Adaptive truncation
             if methodparam.lower() != "adaptive":
-                raise ValueError(
-                    "What?! Choose adaptive as the option or pass an integer for truncation"
-                )
+                raise ValueError("methodparam for truncation must be 'adaptive' or an integer")
 
             if verbose:
                 print("AC regularization: adaptive truncation")
@@ -166,9 +165,9 @@ def autocorr_pearson(
             xc_n = curbtaperme(xc_n, n_samples - 1, methodparam)
 
         else:
-            raise ValueError(
-                "Method parameter for truncation method should be either str or int"
-            )
+            raise ValueError("methodparam for truncation method should be either str or int")
+    else:
+        raise ValueError("Method parameter must be either 'tukey' or 'truncate'.")
 
     # Estimate variance (big formula)
     var_hat_rho = np.zeros((n_rows, n_rows))
@@ -220,7 +219,7 @@ def autocorr_pearson(
             "edges had variance smaller than the textbook variance!"
         )
     else:
-        print("NO truncation to the theoritical variance.")
+        print("NO truncation to the theoretical variance.")
 
     # Our turf--------------------------------
     rf = np.arctanh(rho)
