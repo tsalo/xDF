@@ -311,7 +311,7 @@ def autocorr_pearson_scrub(
     limit_variance=True,
     copy=True,
 ):
-    """Calculate the xDF matrix for a given time series.
+    """Calculate the xDF matrix for a given time series with censored volumes.
 
     Parameters
     ----------
@@ -443,19 +443,19 @@ def autocorr_pearson_scrub(
                 for j in np.arange(n_rows):
                     maxBP = np.max([bp[i], bp[j]])
                     xc_p[i, j, :] = curbtaperme(
-                        xc_p[i, j, :], n_samples - 1, maxBP,
-                        verbose=False,
+                        ac=xc_p[i, j, :],
+                        M=maxBP,
                     )
                     xc_n[i, j, :] = curbtaperme(
-                        xc_n[i, j, :], n_samples - 1, maxBP,
-                        verbose=False,
+                        ac=xc_n[i, j, :],
+                        M=maxBP,
                     )
 
         elif isinstance(methodparam, int):  # Non-adaptive truncation
             print(f"AC regularization: non-adaptive truncation on M = {methodparam}")
-            ac = curbtaperme(ac, n_samples - 1, methodparam)
-            xc_p = curbtaperme(xc_p, n_samples - 1, methodparam)
-            xc_n = curbtaperme(xc_n, n_samples - 1, methodparam)
+            ac = curbtaperme(ac=ac, M=methodparam)
+            xc_p = curbtaperme(ac=xc_p, M=methodparam)
+            xc_n = curbtaperme(ac=xc_n, M=methodparam)
 
         else:
             raise ValueError("methodparam for truncation method should be either str or int")
